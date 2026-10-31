@@ -1,0 +1,13 @@
+[flake8]
+max-line-length = 120
+extend-ignore = E203, W503
+exclude =
+    .venv,
+    .git,
+    __pycache__,
+    reports,
+    build,
+    dist
+per-file-ignores =
+    tests/conftest.py: F401
+    tests/step_defs/*: F811, F401

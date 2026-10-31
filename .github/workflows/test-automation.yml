@@ -1,0 +1,52 @@
+name: Edge-to-Cloud Test Automation CI
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  test-and-quality-gates:
+    name: Code Quality & Automated Test Gates
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+
+      - name: Run Flake8 Linter
+        run: flake8 src tests
+
+      - name: Run Black Code Formatting Check
+        run: black --check src tests
+
+      - name: Run Mypy Static Type Checking
+        run: mypy src tests
+
+      - name: Execute Pytest Suite with Coverage Enforcement
+        run: |
+          pytest --cov=src --cov-report=term-missing --cov-report=xml:reports/coverage.xml --cov-report=html:reports/coverage --cov-fail-under=90 tests/
+
+      - name: Archive Test Coverage Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report-py${{ matrix.python-version }}
+          path: reports/coverage/

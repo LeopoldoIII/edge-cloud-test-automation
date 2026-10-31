@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: edge-cloud-test-runner
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./reports:/app/reports
+    command: >
+      sh -c "flake8 src tests &&
+             black --check src tests &&
+             mypy src tests &&
+             pytest --cov=src --cov-report=term-missing --cov-report=html:reports/coverage --cov-fail-under=90 tests/"

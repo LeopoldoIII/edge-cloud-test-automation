@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=65.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "edge-cloud-test-automation"
+version = "1.0.0"
+description = "Enterprise-grade Test Automation Framework for containerized Edge-to-Cloud architectures"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Senior Backend Automation Team" }
+]
+dependencies = [
+    "pydantic>=2.6.0",
+    "requests>=2.31.0",
+    "httpx>=0.27.0",
+    "cryptography>=42.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.12.0",
+    "pytest-bdd>=7.1.0",
+    "flake8>=7.0.0",
+    "black>=24.2.0",
+    "mypy>=1.8.0",
+    "isort>=5.13.0",
+    "types-requests>=2.31.0",
+]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = ["."]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "unit: Unit tests for core algorithms and models",
+    "integration: Integration tests between services and mock gateways",
+    "resilience: Tests verifying network failure, retry backoff, and timeouts",
+    "security: Tests verifying authentication, encryption, and tamper detection",
+    "e2e: End-to-end device-to-cloud sync pipeline tests",
+    "bdd: Behavior-Driven Development scenarios with pytest-bdd",
+]
+addopts = "-ra -q --strict-markers"
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+show_error_codes = true
+strict = true
+
+[[tool.mypy.overrides]]
+module = ["pytest", "pytest_bdd"]
+ignore_missing_imports = true
