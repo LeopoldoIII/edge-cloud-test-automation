@@ -22,3 +22,4 @@ Welcome to the **Edge-to-Cloud Test Automation Framework** workspace. This repos
 - `.agents/rules/coding_standards.md`: Code formatting, static typing, and exception handling principles.
 - `.agents/rules/testing_guidelines.md`: Test naming conventions, fixture isolation, and assertion practices.
 - `.agents/skills/`: Procedural runbooks for chaos simulation, synthetic dataset generation, security validation, and test flake debugging.
+

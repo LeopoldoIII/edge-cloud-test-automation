@@ -25,3 +25,4 @@ from src.generators.edge_file_generator import generate_corrupted_chunk_stream
 # Generates 10 out-of-order chunks
 chunks = generate_corrupted_chunk_stream(total_chunks=10, out_of_order=True)
 ```
+

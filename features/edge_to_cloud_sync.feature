@@ -12,3 +12,4 @@ Feature: Edge-to-Cloud Resilient File Synchronization
     Then the resilient client retries with exponential backoff and jitter
     And all 3 telemetry batches are successfully acknowledged by the cloud gateway
     And the cloud gateway processes each batch effectively once with zero duplicates
+

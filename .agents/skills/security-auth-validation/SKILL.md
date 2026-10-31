@@ -21,3 +21,4 @@ Use this skill when developing or reviewing tests covering security controls, au
 - **At-Rest & In-Flight Protection:** Payloads encrypted with AES-256-GCM include an initialization vector (IV) and a 16-byte authentication tag.
 - **Tamper Detection:** Modifying even a single bit of ciphertext or associated data must cause decryption failure (`InvalidTag`).
 - **Checksum Verification:** Cloud gateway recomputes SHA-256 checksum and compares it against `X-Payload-SHA256` header in constant time.
+

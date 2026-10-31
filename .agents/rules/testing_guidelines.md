@@ -22,3 +22,4 @@ Group tests logically using custom Pytest markers:
 ## 4. Coverage Thresholds
 - Maintain minimum test coverage of >= 90% across all modules in `src/`.
 - Every edge case (malformed data, out-of-order chunks, expired tokens) must have explicit negative assertions.
+

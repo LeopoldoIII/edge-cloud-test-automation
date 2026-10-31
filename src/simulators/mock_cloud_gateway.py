@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from src.core.crypto_integrity import CryptoIntegrityManager
+from src.core.metrics import global_metrics
 
 
 @dataclass
@@ -18,6 +19,17 @@ class UploadedFileSession:
     received_chunks: dict[int, bytes] = field(default_factory=dict)
     is_completed: bool = False
     reassembled_sha256: str | None = None
+
+
+@dataclass
+class ResumableByteSession:
+    """Tracks state of a byte-range resumable upload session."""
+
+    file_id: str
+    total_expected_bytes: int
+    accumulated_bytes: bytearray = field(default_factory=bytearray)
+    is_completed: bool = False
+    final_sha256: str | None = None
 
 
 class MockCloudGateway:
@@ -37,6 +49,7 @@ class MockCloudGateway:
         self.idempotency_store: dict[str, dict[str, Any]] = {}  # key -> cached response
         self.ingested_telemetry: list[dict[str, Any]] = []
         self.upload_sessions: dict[str, UploadedFileSession] = {}
+        self.resumable_sessions: dict[str, ResumableByteSession] = {}
 
     def handle_oauth_token(self, payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
         """Handles POST /oauth/token."""
@@ -137,6 +150,7 @@ class MockCloudGateway:
         if expected_chunk_sha:
             computed_chunk_sha = hashlib.sha256(chunk_data).hexdigest()
             if computed_chunk_sha.lower() != expected_chunk_sha.lower():
+                global_metrics.increment_counter("tamper_detection_total")
                 return 400, {
                     "error": "chunk_integrity_failure",
                     "expected": expected_chunk_sha,
@@ -171,4 +185,81 @@ class MockCloudGateway:
             "chunk_index": chunk_index,
             "received": len(session.received_chunks),
             "expected": total_chunks,
+        }
+
+    def handle_health(self, probe_type: str = "live") -> tuple[int, dict[str, Any]]:
+        """Handles /health/live and /health/ready container probes."""
+        if probe_type == "live":
+            return 200, {"status": "alive", "timestamp": time.time()}
+        return 200, {
+            "status": "ready",
+            "services": {"database": "up", "object_store": "up", "auth_service": "up"},
+        }
+
+    def get_resumable_status(self, file_id: str) -> tuple[int, dict[str, Any]]:
+        """Handles GET /api/v1/upload/resumable/{file_id}/status for resuming interrupted uploads."""
+        session = self.resumable_sessions.get(file_id)
+        if not session:
+            return 404, {"error": "session_not_found"}
+        return 200, {
+            "file_id": file_id,
+            "uploaded_bytes": len(session.accumulated_bytes),
+            "total_expected_bytes": session.total_expected_bytes,
+            "is_completed": session.is_completed,
+        }
+
+    def handle_resumable_byte_upload(
+        self,
+        headers: dict[str, str],
+        file_id: str,
+        byte_data: bytes,
+    ) -> tuple[int, dict[str, Any]]:
+        """Handles PATCH /api/v1/upload/resumable/{file_id} with Content-Range bytes X-Y/TOTAL."""
+        is_auth, auth_msg = self.validate_auth_header(headers.get("Authorization"))
+        if not is_auth:
+            return 401, {"error": "unauthorized", "message": auth_msg}
+
+        content_range = headers.get("Content-Range")
+        if not content_range or not content_range.startswith("bytes "):
+            return 400, {"error": "missing_content_range_header"}
+
+        # Format: bytes START-END/TOTAL
+        range_part, total_part = content_range[6:].split("/")
+        start_str, end_str = range_part.split("-")
+        start_byte, total_bytes = int(start_str), int(total_part)
+
+        session = self.resumable_sessions.setdefault(
+            file_id,
+            ResumableByteSession(file_id=file_id, total_expected_bytes=total_bytes),
+        )
+
+        current_offset = len(session.accumulated_bytes)
+        if start_byte != current_offset:
+            return 416, {
+                "error": "range_not_satisfiable",
+                "current_offset": current_offset,
+                "requested_start": start_byte,
+            }
+
+        session.accumulated_bytes.extend(byte_data)
+        new_offset = len(session.accumulated_bytes)
+
+        if new_offset == total_bytes:
+            session.is_completed = True
+            session.final_sha256 = CryptoIntegrityManager.compute_sha256(
+                bytes(session.accumulated_bytes)
+            )
+            global_metrics.increment_counter("resumable_uploads_completed_total")
+            return 200, {
+                "status": "completed",
+                "file_id": file_id,
+                "total_bytes": total_bytes,
+                "sha256": session.final_sha256,
+            }
+
+        return 206, {
+            "status": "partial_content",
+            "file_id": file_id,
+            "uploaded_bytes": new_offset,
+            "total_bytes": total_bytes,
         }

@@ -23,3 +23,4 @@ Use this skill when investigating inconsistent test outcomes or race conditions 
 4. **Unclosed Sockets / Leaked Coroutines:**
    - *Symptom:* `ResourceWarning: unclosed transport` or lingering background threads.
    - *Fix:* Explicitly close client sessions in `yield` fixture teardown blocks.
+

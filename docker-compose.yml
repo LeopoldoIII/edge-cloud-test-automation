@@ -16,3 +16,4 @@ services:
              black --check src tests &&
              mypy src tests &&
              pytest --cov=src --cov-report=term-missing --cov-report=html:reports/coverage --cov-fail-under=90 tests/"
+

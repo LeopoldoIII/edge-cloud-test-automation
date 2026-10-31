@@ -3,6 +3,7 @@
 from src.core.auth_manager import OAuth2TokenManager, TokenInfo
 from src.core.chaos_engine import ChaosEngine, ChaosPolicy
 from src.core.crypto_integrity import CryptoIntegrityManager
+from src.core.dicom_scrubber import DicomDeidentifier
 from src.core.exceptions import (
     AuthenticationError,
     EdgeFrameworkError,
@@ -13,19 +14,23 @@ from src.core.exceptions import (
 )
 from src.core.http_client import ResilientHttpClient
 from src.core.logger import get_logger
+from src.core.metrics import MetricsCollector, global_metrics
 
 __all__ = [
     "AuthenticationError",
     "ChaosEngine",
     "ChaosPolicy",
     "CryptoIntegrityManager",
+    "DicomDeidentifier",
     "EdgeFrameworkError",
     "IdempotencyConflictError",
     "IntegrityError",
     "MaxRetriesExceededError",
+    "MetricsCollector",
     "NetworkResilienceError",
     "OAuth2TokenManager",
     "ResilientHttpClient",
     "TokenInfo",
     "get_logger",
+    "global_metrics",
 ]

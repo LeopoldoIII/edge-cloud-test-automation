@@ -185,3 +185,4 @@ docker-compose up --build --abort-on-container-exit
 - **Code Coverage:** **97.26%** statement coverage across all core modules.
 - **Static Typing:** 100% strict `mypy` compliance.
 - **Zero External Dependencies:** Built with self-contained mock gateways and fault injectors for deterministic, lightning-fast execution without flaky network calls.
+

@@ -23,3 +23,4 @@ Use this skill when designing or debugging network resilience and failure inject
    - Total attempts equals expected retry count before success (or raises `MaxRetriesExceededError`).
    - Elapsed delay adheres to exponential backoff bounds.
    - Cloud receiver records exactly one processed item despite multiple network attempts.
+

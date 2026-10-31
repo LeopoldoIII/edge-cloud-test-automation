@@ -24,3 +24,4 @@ RUN pip install --no-cache-dir -e .
 
 # Run linter, type checks, and full automated test suite with coverage enforcement
 CMD ["pytest", "--cov=src", "--cov-report=term-missing", "--cov-fail-under=90", "tests/"]
+

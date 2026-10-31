@@ -66,6 +66,25 @@ class MockGatewayAdapter(requests.adapters.HTTPAdapter):
             )
             response.status_code = status
             response._content = json.dumps(data).encode("utf-8")
+        elif "/health/live" in url:
+            status, data = self.gateway.handle_health("live")
+            response.status_code = status
+            response._content = json.dumps(data).encode("utf-8")
+        elif "/health/ready" in url:
+            status, data = self.gateway.handle_health("ready")
+            response.status_code = status
+            response._content = json.dumps(data).encode("utf-8")
+        elif "/api/v1/upload/resumable" in url and "/status" in url:
+            file_id = url.split("/status")[0].split("/")[-1]
+            status, data = self.gateway.get_resumable_status(file_id)
+            response.status_code = status
+            response._content = json.dumps(data).encode("utf-8")
+        elif "/api/v1/upload/resumable" in url:
+            file_id = url.split("/")[-1]
+            chunk_bytes = body if isinstance(body, bytes) else b""
+            status, data = self.gateway.handle_resumable_byte_upload(headers, file_id, chunk_bytes)
+            response.status_code = status
+            response._content = json.dumps(data).encode("utf-8")
         else:
             response.status_code = 404
             response._content = json.dumps({"error": "not_found"}).encode("utf-8")
