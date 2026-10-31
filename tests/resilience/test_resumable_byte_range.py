@@ -72,3 +72,4 @@ class TestResumableByteRange:
         )
         assert resp.status_code == 416
         assert resp.json()["error"] == "range_not_satisfiable"
+
